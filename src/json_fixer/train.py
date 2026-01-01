@@ -29,7 +29,7 @@ training_configuration = {
     "learning_rate_scheduler_type": "cosine",
     "logging_steps": 4,
     "max_length": 2048,
-    "num_train_epochs": 8,
+    "num_train_epochs": 6,
     "output_dir": "checkpoints",
     "per_device_eval_batch_size": 1,
     "per_device_train_batch_size": 1,
@@ -70,7 +70,6 @@ lora_config = LoraConfig(
   bias="none",
   target_modules=training_configuration["lora"]["target_modules"]
 )
-
 
 model = get_peft_model(model, lora_config)
 
