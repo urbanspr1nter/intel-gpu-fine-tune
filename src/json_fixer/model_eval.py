@@ -8,7 +8,7 @@ test_dataset_file = "/home/rngo/code/intel-gpu-fine-tune/src/data_processing/tes
 
 base_api_url = "http://192.168.1.36:8000/v1"
 api_key = "none"
-model = "Qwen3-0.6B"
+model = "Qwen3-0.6B-finetuned"
 
 client: openai.Client = openai.Client(
     base_url=base_api_url,
