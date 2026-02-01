@@ -1,6 +1,9 @@
 import json
 from typing import Any
 
+def prettify_json_simple(unprettied_json: str) -> str:
+    return json.dumps(json.loads(unprettied_json), indent=2)
+
 def prettify_json(unprettied_json: str) -> str:
     """
     Pretty-print a JSON document (2-space indent).

@@ -210,3 +210,4 @@ unsloth_*
 *.gguf
 *-finetuned
 models
+src/json_fixer/checkpoints

@@ -1,5 +1,6 @@
 from datasets import Dataset
 from json_fixer.convert_to_conversation import convert_to_conversation
+from json_fixer.model_config import MODEL_CONFIG
 import jsonlines
 from peft import get_peft_model, LoraConfig
 import torch
@@ -25,7 +26,7 @@ training_configuration = {
     "eval_accumulation_steps": 1, 
     "eval_steps": 100,
     "gradient_accumulation_steps": 4,
-    "learning_rate": 2.5e-5,
+    "learning_rate": 2e-4,
     "learning_rate_scheduler_type": "cosine",
     "logging_steps": 4,
     "max_length": 2048,
@@ -34,12 +35,13 @@ training_configuration = {
     "per_device_eval_batch_size": 1,
     "per_device_train_batch_size": 1,
     "save_steps": 100,
-    "warmup_ratio": 0.05
+    "warmup_ratio": 0.03,
+    "weight_decay": 0.001
   }
 }
 
-model_id = "unsloth/Qwen3-0.6B"
-fine_tuned_model_id = "Qwen3-0.6B-finetuned"
+model_id = MODEL_CONFIG.SmolLM2_135M 
+fine_tuned_model_id = MODEL_CONFIG.get_output_name(model_id) 
 train_dataset_path = "/home/rngo/code/intel-gpu-fine-tune/dataset/train_data.jsonl"
 eval_dataset_path = "/home/rngo/code/intel-gpu-fine-tune/dataset/eval_data.jsonl"
 
@@ -126,7 +128,7 @@ trainer = SFTTrainer(
     save_steps=training_configuration["train"]["save_steps"],
     save_strategy="steps",
     warmup_ratio=training_configuration["train"]["warmup_ratio"],
-    weight_decay=0.01,
+    weight_decay=training_configuration["train"]["weight_decay"],
 
     # save some more VRAM
     prediction_loss_only=True
