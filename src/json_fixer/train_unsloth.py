@@ -1,18 +1,15 @@
-import torch
-import jsonlines
+from unsloth import FastLanguageModel
 from datasets import Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
-from trl import SFTTrainer, SFTConfig
+import jsonlines
+from trl import SFTConfig, SFTTrainer
 
 from json_fixer.convert_to_conversation import convert_to_conversation
 from json_fixer.model_config import MODEL_CONFIG
 from json_fixer.training_config import training_configuration
-from peft import get_peft_model, LoraConfig
 
-# Change this for a different model
-model_id = MODEL_CONFIG.LFM2_700M 
+model_id = MODEL_CONFIG.LFM2_700M
+fine_tuned_model_id = MODEL_CONFIG.get_output_name(model_id)
 
-fine_tuned_model_id = MODEL_CONFIG.get_output_name(model_id) 
 train_dataset_path = "/home/rngo/code/intel-gpu-fine-tune/dataset/train_data.jsonl"
 eval_dataset_path = "/home/rngo/code/intel-gpu-fine-tune/dataset/eval_data.jsonl"
 
@@ -24,41 +21,37 @@ with jsonlines.open(eval_dataset_path) as j:
   eval_dataset = list(j)
 converted_eval_dataset = [convert_to_conversation(example) for example in eval_dataset]
 
-model = AutoModelForCausalLM.from_pretrained(
-  model_id,
-  torch_dtype=torch.bfloat16
-)
-# Enable gradient checkpointing compatability with LoRA
-model.enable_input_require_grads()
-
-tokenizer = AutoTokenizer.from_pretrained(
-  model_id
-)
-tokenizer.pad_token = tokenizer.eos_token
-
-lora_config = LoraConfig(
-  r=training_configuration["lora"]["rank"],
-  lora_alpha=training_configuration["lora"]["alpha"],
-  lora_dropout=training_configuration["lora"]["dropout"],
-  bias="none",
-  target_modules=training_configuration["lora"]["target_modules"]
+model, tokenizer = FastLanguageModel.from_pretrained(
+    model_id,
+    max_seq_length=2048,
+    load_in_4bit=False,
+    load_in_8bit=False,
+    full_finetuning=False  
 )
 
-model = get_peft_model(model, lora_config)
-
+model = FastLanguageModel.get_peft_model(
+    model,
+    r=training_configuration["lora"]["rank"],
+    lora_alpha=training_configuration["lora"]["alpha"],
+    lora_dropout=training_configuration["lora"]["dropout"],
+    bias="none",
+    target_modules=training_configuration["lora"]["target_modules"],
+    use_gradient_checkpointing="unsloth",
+    use_rslora=False,
+    loftq_config=None
+)
 
 def formatting_prompts_func(examples):
-  conversations = examples["conversations"]
+    convos = examples["conversations"]
+    texts = [
+        tokenizer.apply_chat_template(
+            convo,
+            tokenize=False,
+            add_generation_prompt=False
+        ) for convo in convos
+    ]
 
-  texts = [
-    tokenizer.apply_chat_template(
-      conversation,
-      tokenize=False,
-      add_generation_prompt=False
-    ) for conversation in conversations
-  ]
-
-  return {"text": texts}
+    return {"text": texts}
 
 train_dataset = Dataset.from_list(converted_train_dataset).map(
   formatting_prompts_func,
