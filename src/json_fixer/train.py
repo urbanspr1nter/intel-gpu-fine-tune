@@ -9,7 +9,9 @@ from json_fixer.model_config import MODEL_CONFIG
 from json_fixer.training_config import training_configuration
 from peft import get_peft_model, LoraConfig
 
-model_id = MODEL_CONFIG.SmolLM2_135M 
+# Change this for a different model
+model_id = MODEL_CONFIG.LFM2_700M 
+
 fine_tuned_model_id = MODEL_CONFIG.get_output_name(model_id) 
 train_dataset_path = "/home/rngo/code/intel-gpu-fine-tune/dataset/train_data.jsonl"
 eval_dataset_path = "/home/rngo/code/intel-gpu-fine-tune/dataset/eval_data.jsonl"

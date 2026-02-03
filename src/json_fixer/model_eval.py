@@ -7,9 +7,9 @@ from utils.strip_think_tags import strip_think_tags
 
 test_dataset_file = "/home/rngo/code/intel-gpu-fine-tune/dataset/test_data.jsonl"
 
-base_api_url = "http://192.168.1.36:8000/v1"
+base_api_url = "http://192.168.1.11:8000/v1"
 api_key = "none"
-model = "Qwen3-0.6B"
+model = "lfm2-700m"
 
 client: openai.Client = openai.Client(
   base_url=base_api_url,
@@ -28,6 +28,10 @@ for example in data:
   response: ChatCompletion = client.chat.completions.create(
     model=model,
     messages=[
+      {
+        "role": "system",
+        "content": f"You are an expert JSON parser, formatter and fixer. Only output JSON wrapped in markdown code fences."
+      },
       {"role": "user", "content": user_prompt}
     ],
     temperature=0.01
@@ -45,6 +49,6 @@ for example in data:
     else:
       print(f"{assistant_message} did not match ground truth: {ground_truth}")
   except:
-    print(f"{assistant_message} did not match ground truth: {ground_truth}")
+    print(f"{assistant_message} did not have the correct response.")
 
 print(f"Final score for test set: {float(1.0*score) / len(data)}")

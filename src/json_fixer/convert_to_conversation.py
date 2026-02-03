@@ -7,6 +7,10 @@ def convert_to_conversation(example):
 
   messages = [
     {
+      "role": "system",
+      "content": f"You are an expert JSON parser, formatter and fixer. Only output JSON wrapped in markdown code fences."
+    },
+    {
       "role": "user",
       "content": f"Fix this JSON:\n{input_json}"
     },
